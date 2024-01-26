@@ -47,23 +47,23 @@ export default function Home() {
     resolver: yupResolver(listSchema),
   });
 
+  const fetchData = async () => {
+    try {
+      const snapshot = await getDocs(collection(db, "items"));
+      const querySnapshot = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setData(querySnapshot);
+    } catch (error) {
+      console.error("Erro ao buscar dados:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const snapshot = await getDocs(collection(db, "items"));
-        const querySnapshot = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        setData(querySnapshot);
-      } catch (error) {
-        console.error("Erro ao buscar dados:", error);
-      }
-    };
-
     fetchData();
-  }, [data]);
+  }, [edit, setData]);
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     try {
@@ -73,6 +73,7 @@ export default function Home() {
         await addDoc(collection(db, "items"), data);
       }
 
+      fetchData();
       reset();
       setEdit("");
     } catch (error: any) {
@@ -82,6 +83,7 @@ export default function Home() {
 
   const deleteItem = async (id: string) => {
     await deleteDoc(doc(db, "items", id));
+    fetchData();
   };
 
   const updateItem = async (data: { id: string; name?: string }) => {
